@@ -31,7 +31,7 @@ public:
 
     bool find(int u, int v)
     {
-        for (int i = head[u]; i != -1; i = head[i])
+        for (int i = head[u]; i != -1; i = nxt[i])
             if (to[i] == v)
                 return true;
         return false;
@@ -42,7 +42,7 @@ public:
         if (vis[u])
             return;
         vis[u] = true;
-        for (int i = head[u]; i != -1; i = head[i])
+        for (int i = head[u]; i != -1; i = nxt[i])
             dfs(to[i]);
     }
 };

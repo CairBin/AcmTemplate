@@ -1,89 +1,87 @@
-// 使用优先队列优化的Prim算法
-
 #include <bits/stdc++.h>
 
 using namespace std;
 
 #define int long long int
 
-#define N (int)1e5
-#define M 2e5 + 10
+int n, m;
+vector<bool> vis;
+vector<int> head, nxt, to, w, dis;
 
-typedef struct Edge
+void init()
 {
-    int v, w, x;
-} edge;
-
-edge e[(int)(M * 2)];
-int cnte;
-int h[N];
-
-void addEdge(int u, int v, int w)
-{
-    e[++cnte] = edge{v, w, h[u]};
-    h[u] = cnte;
+    vis.resize(n + 1, false);
+    head.resize(n + 1, -1);
+    dis.resize(n + 1, -1);
 }
 
-typedef struct S
+void add(int u, int v, int we)
 {
-    int u, d;
-    bool operator<(const S &x) const
-    {
-        // 距离大就远优先级就低
-        return this->d > x.d;
-    }
-} S;
+    nxt.push_back(head[u]);
+    head[u] = to.size();
+    to.push_back(v);
+    w.push_back(we);
+}
 
-priority_queue<S> que;
-int dis[N];
-bool vis[N]; // 存储是否已经被访问过
-
-int res, cnt;
-int n, m;
-
-void prim()
+int prim()
 {
-    memset(dis, 0x3f, sizeof(dis)); // 0x3f十进制1061109567是10^9级别的，通常作为无穷大
+    int res = 0;
     dis[1] = 0;
-    que.push({1, 0});
-    while (!que.empty())
+    //-1为无穷大
+    for (int i = head[1]; i != -1; i = nxt[i])
+        dis[to[i]] = dis[to[i]] == -1 ? w[i] : min(dis[to[i]], w[i]);
+    // printf("dis2:%lld\n", dis[2]);
+    for (int i = 0, now = 1; i < n; i++)
     {
-        if (cnt >= n)
-            break;
-        int u = que.top().u;
-        int d = que.top().d;
-        que.pop();
-
-        // 判断是否访问过
-        if (vis[u])
-            continue;
-        vis[u] = 1;
-        ++cnt;
-        res += d;
-
-        for (int i = h[u]; i; i = e[i].x)
+        int mins = -1;
+        vis[now] = 1;
+        // printf("now: %lld dis: %lld\ndis[2]: %lld\n", now, dis[now], dis[2]);
+        //   从与当前树相连的所有终点里找距离最小的点
+        for (int j = 1; j <= n; j++)
         {
-            int v = e[i].v;
-            int w = e[i].w;
+            if (!vis[j] && (mins == -1 || mins > dis[j]))
+                mins = dis[j], now = j;
+        }
 
-            if (w < dis[v])
-                dis[v] = w, que.push({v, w});
+        // cout << mins << endl;
+        if (mins >= 0)
+            res += mins;
+
+        // 建立与刚加入点相连的结点的距离
+        // 注意只是建立周围结点的距离关系而不是下次连接结点时一定要从与这个相连结点来找
+        for (int j = head[now]; j != -1; j = nxt[j])
+        {
+            int v = to[j];
+            if ((dis[v] > w[j] || dis[v] == -1) && !vis[v])
+                dis[v] = w[j];
         }
     }
+
+    return res;
 }
 
 signed main()
 {
     cin >> n >> m;
-    for (int i = 1, u, v, w; i <= m; ++i)
+    init();
+    for (int i = 0; i < m; i++)
     {
+        int u, v, w;
         cin >> u >> v >> w;
-        addEdge(u, v, w);
-        addEdge(v, u, w);
+        add(u, v, w);
+        add(v, u, w);
     }
 
-    prim();
-    if (cnt == n)
+    int res = prim();
+    bool flag = true;
+    for (int i = 1; i < vis.size(); i++)
+        if (!vis[i])
+        {
+            flag = false;
+            break;
+        }
+
+    if (flag)
         cout << res << endl;
     else
         cout << "orz" << endl;
